@@ -118,7 +118,7 @@ export default function ItemFormModal({ open, item, categories = [], onClose, on
                 list: 'category-suggestions',
               },
               { name: 'quantity', label: 'Quantity', type: 'number', min: 0, step: '1' },
-              { name: 'unitPrice', label: 'Unit price', type: 'number', min: 0, step: '0.01' },
+              { name: 'unitPrice', label: 'Unit price (GHS)', type: 'number', min: 0, step: '0.01' },
               { name: 'location', label: 'Location', type: 'text', placeholder: 'Warehouse A' },
             ].map((field) => (
               <label key={field.name} className="block">
