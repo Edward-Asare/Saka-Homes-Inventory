@@ -1,8 +1,13 @@
 import { Navigate, Route, Routes } from 'react-router-dom';
 import Layout from './components/Layout';
 import { useAuth } from './context/AuthContext';
+import Catalog from './pages/Catalog';
 import Dashboard from './pages/Dashboard';
+import Directories from './pages/Directories';
 import Login from './pages/Login';
+import Movements from './pages/Movements';
+import PurchaseOrders from './pages/PurchaseOrders';
+import Reports from './pages/Reports';
 
 function ProtectedRoute({ children }) {
   const { user, loading } = useAuth();
@@ -35,6 +40,11 @@ export default function App() {
         }
       >
         <Route index element={<Dashboard />} />
+        <Route path="catalog" element={<Catalog />} />
+        <Route path="movements" element={<Movements />} />
+        <Route path="purchase-orders" element={<PurchaseOrders />} />
+        <Route path="directories" element={<Directories />} />
+        <Route path="reports" element={<Reports />} />
       </Route>
       <Route path="*" element={<Navigate to="/" replace />} />
     </Routes>
