@@ -2,16 +2,49 @@ const express = require('express');
 const Item = require('../models/Item');
 const { protect } = require('../middleware/auth');
 const { validate, itemRules, itemUpdateRules } = require('../middleware/validate');
+const { buildDashboardStats } = require('../utils/stats');
+const { getStockStatus } = require('../utils/stockStatus');
 
 const router = express.Router();
-
-// All item routes require authentication
 router.use(protect);
 
-// GET /api/items — list with optional search & category filter
+const parseDateRange = (range, from, to) => {
+  const now = new Date();
+  const startOfDay = (d) => {
+    const x = new Date(d);
+    x.setHours(0, 0, 0, 0);
+    return x;
+  };
+  const endOfDay = (d) => {
+    const x = new Date(d);
+    x.setHours(23, 59, 59, 999);
+    return x;
+  };
+
+  if (range === 'today') {
+    return { $gte: startOfDay(now), $lte: endOfDay(now) };
+  }
+  if (range === 'week') {
+    const start = startOfDay(now);
+    start.setDate(start.getDate() - start.getDay());
+    return { $gte: start, $lte: endOfDay(now) };
+  }
+  if (range === 'month') {
+    const start = new Date(now.getFullYear(), now.getMonth(), 1);
+    return { $gte: start, $lte: endOfDay(now) };
+  }
+  if (range === 'custom' && (from || to)) {
+    const filter = {};
+    if (from) filter.$gte = startOfDay(from);
+    if (to) filter.$lte = endOfDay(to);
+    return filter;
+  }
+  return null;
+};
+
 router.get('/', async (req, res, next) => {
   try {
-    const { search, category } = req.query;
+    const { search, category, range, from, to, status } = req.query;
     const filter = {};
 
     if (category && category !== 'all') {
@@ -27,63 +60,74 @@ router.get('/', async (req, res, next) => {
       ];
     }
 
-    const items = await Item.find(filter).sort({ updatedAt: -1 });
+    const restockRange = parseDateRange(range, from, to);
+    if (restockRange) {
+      filter.lastRestocked = restockRange;
+    }
+
+    let items = await Item.find(filter)
+      .populate('supplier', 'name contactName')
+      .sort({ updatedAt: -1 });
+
+    if (status && status !== 'all') {
+      items = items.filter((item) => getStockStatus(item) === status);
+    }
+
     res.json(items);
   } catch (error) {
     next(error);
   }
 });
 
-// GET /api/items/stats — dashboard summary
 router.get('/stats', async (req, res, next) => {
   try {
     const items = await Item.find();
-    const totalItems = items.length;
-    const lowStockAlerts = items.filter((item) => item.quantity <= 5).length;
-    const totalInventoryValue = items.reduce(
-      (sum, item) => sum + item.quantity * item.unitPrice,
-      0
-    );
-    const categories = [...new Set(items.map((item) => item.category))].sort();
-
-    res.json({
-      totalItems,
-      lowStockAlerts,
-      totalInventoryValue,
-      categories,
-    });
+    res.json(buildDashboardStats(items));
   } catch (error) {
     next(error);
   }
 });
 
-// GET /api/items/:id
 router.get('/:id', async (req, res, next) => {
   try {
-    const item = await Item.findById(req.params.id);
-
-    if (!item) {
-      return res.status(404).json({ message: 'Item not found' });
-    }
-
+    const item = await Item.findById(req.params.id).populate('supplier', 'name contactName email phone');
+    if (!item) return res.status(404).json({ message: 'Item not found' });
     res.json(item);
   } catch (error) {
     next(error);
   }
 });
 
-// POST /api/items
 router.post('/', itemRules, validate, async (req, res, next) => {
   try {
-    const { name, sku, category, quantity, unitPrice, location } = req.body;
+    const {
+      name,
+      sku,
+      category,
+      unit,
+      quantity,
+      unitPrice,
+      minStock,
+      maxStock,
+      location,
+      supplier,
+      lastRestocked,
+      active,
+    } = req.body;
 
     const item = await Item.create({
       name,
       sku,
       category,
+      unit: unit || 'pcs',
       quantity,
       unitPrice,
+      minStock: minStock ?? 5,
+      maxStock: maxStock ?? 100,
       location,
+      supplier: supplier || null,
+      lastRestocked: lastRestocked || (Number(quantity) > 0 ? new Date() : null),
+      active: active !== false,
       createdBy: req.user._id,
     });
 
@@ -93,42 +137,43 @@ router.post('/', itemRules, validate, async (req, res, next) => {
   }
 });
 
-// PUT /api/items/:id
 router.put('/:id', itemUpdateRules, validate, async (req, res, next) => {
   try {
-    const allowed = ['name', 'sku', 'category', 'quantity', 'unitPrice', 'location'];
+    const allowed = [
+      'name',
+      'sku',
+      'category',
+      'unit',
+      'quantity',
+      'unitPrice',
+      'minStock',
+      'maxStock',
+      'location',
+      'supplier',
+      'lastRestocked',
+      'active',
+    ];
     const updates = {};
-
     allowed.forEach((field) => {
-      if (req.body[field] !== undefined) {
-        updates[field] = req.body[field];
-      }
+      if (req.body[field] !== undefined) updates[field] = req.body[field];
     });
 
     const item = await Item.findByIdAndUpdate(req.params.id, updates, {
       new: true,
       runValidators: true,
-    });
+    }).populate('supplier', 'name contactName');
 
-    if (!item) {
-      return res.status(404).json({ message: 'Item not found' });
-    }
-
+    if (!item) return res.status(404).json({ message: 'Item not found' });
     res.json(item);
   } catch (error) {
     next(error);
   }
 });
 
-// DELETE /api/items/:id
 router.delete('/:id', async (req, res, next) => {
   try {
     const item = await Item.findByIdAndDelete(req.params.id);
-
-    if (!item) {
-      return res.status(404).json({ message: 'Item not found' });
-    }
-
+    if (!item) return res.status(404).json({ message: 'Item not found' });
     res.json({ message: 'Item deleted', id: item._id });
   } catch (error) {
     next(error);
