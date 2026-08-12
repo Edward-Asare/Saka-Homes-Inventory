@@ -20,7 +20,14 @@ const itemSchema = new mongoose.Schema(
       type: String,
       required: [true, 'Category is required'],
       trim: true,
-      maxlength: [60, 'Category cannot exceed 60 characters'],
+      maxlength: [80, 'Category cannot exceed 80 characters'],
+    },
+    unit: {
+      type: String,
+      required: [true, 'Unit of measure is required'],
+      trim: true,
+      maxlength: [30, 'Unit cannot exceed 30 characters'],
+      default: 'pcs',
     },
     quantity: {
       type: Number,
@@ -34,15 +41,38 @@ const itemSchema = new mongoose.Schema(
       min: [0, 'Unit price cannot be negative'],
       default: 0,
     },
+    minStock: {
+      type: Number,
+      min: [0, 'Min stock cannot be negative'],
+      default: 5,
+    },
+    maxStock: {
+      type: Number,
+      min: [0, 'Max stock cannot be negative'],
+      default: 100,
+    },
     location: {
       type: String,
       required: [true, 'Location is required'],
       trim: true,
       maxlength: [100, 'Location cannot exceed 100 characters'],
     },
+    supplier: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: 'Supplier',
+      default: null,
+    },
+    lastRestocked: {
+      type: Date,
+      default: null,
+    },
     lastUpdated: {
       type: Date,
       default: Date.now,
+    },
+    active: {
+      type: Boolean,
+      default: true,
     },
     createdBy: {
       type: mongoose.Schema.Types.ObjectId,
@@ -53,6 +83,16 @@ const itemSchema = new mongoose.Schema(
     timestamps: true,
   }
 );
+
+itemSchema.virtual('stockStatus').get(function stockStatus() {
+  if (this.quantity <= 0) return 'out';
+  if (this.quantity <= (this.minStock ?? 5)) return 'low';
+  if (this.maxStock && this.quantity > this.maxStock) return 'over';
+  return 'optimal';
+});
+
+itemSchema.set('toJSON', { virtuals: true });
+itemSchema.set('toObject', { virtuals: true });
 
 itemSchema.pre('save', function updateLastUpdated(next) {
   this.lastUpdated = new Date();

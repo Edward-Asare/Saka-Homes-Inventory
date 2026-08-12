@@ -29,9 +29,12 @@ const loginRules = [
 const itemRules = [
   body('name').trim().notEmpty().withMessage('Name is required').isLength({ max: 120 }),
   body('sku').trim().notEmpty().withMessage('SKU is required').isLength({ max: 40 }),
-  body('category').trim().notEmpty().withMessage('Category is required').isLength({ max: 60 }),
+  body('category').trim().notEmpty().withMessage('Category is required').isLength({ max: 80 }),
+  body('unit').optional().trim().isLength({ max: 30 }),
   body('quantity').isFloat({ min: 0 }).withMessage('Quantity must be a non-negative number'),
   body('unitPrice').isFloat({ min: 0 }).withMessage('Unit price must be a non-negative number'),
+  body('minStock').optional().isFloat({ min: 0 }).withMessage('Min stock must be non-negative'),
+  body('maxStock').optional().isFloat({ min: 0 }).withMessage('Max stock must be non-negative'),
   body('location').trim().notEmpty().withMessage('Location is required').isLength({ max: 100 }),
 ];
 
@@ -43,7 +46,8 @@ const itemUpdateRules = [
     .trim()
     .notEmpty()
     .withMessage('Category cannot be empty')
-    .isLength({ max: 60 }),
+    .isLength({ max: 80 }),
+  body('unit').optional().trim().isLength({ max: 30 }),
   body('quantity')
     .optional()
     .isFloat({ min: 0 })
@@ -52,6 +56,8 @@ const itemUpdateRules = [
     .optional()
     .isFloat({ min: 0 })
     .withMessage('Unit price must be a non-negative number'),
+  body('minStock').optional().isFloat({ min: 0 }),
+  body('maxStock').optional().isFloat({ min: 0 }),
   body('location')
     .optional()
     .trim()

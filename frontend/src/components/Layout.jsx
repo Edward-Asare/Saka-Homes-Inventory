@@ -2,7 +2,12 @@ import { NavLink, Outlet } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 
 const navItems = [
-  { to: '/', label: 'Inventory', end: true },
+  { to: '/', label: 'Dashboard', end: true },
+  { to: '/catalog', label: 'Catalog' },
+  { to: '/movements', label: 'Dispatches' },
+  { to: '/purchase-orders', label: 'Purchase Orders' },
+  { to: '/directories', label: 'Categories & Suppliers' },
+  { to: '/reports', label: 'Reports' },
 ];
 
 export default function Layout() {
@@ -11,16 +16,15 @@ export default function Layout() {
   return (
     <div className="min-h-screen bg-canvas text-ink">
       <div className="flex min-h-screen">
-        {/* Desktop sidebar */}
-        <aside className="hidden w-60 shrink-0 border-r border-border bg-surface md:flex md:flex-col">
+        <aside className="hidden w-64 shrink-0 border-r border-border bg-surface md:flex md:flex-col">
           <div className="border-b border-border px-5 py-6">
             <p className="font-display text-2xl tracking-tight text-ink">Saka Homes</p>
             <p className="mt-1 text-xs font-medium uppercase tracking-[0.14em] text-muted">
-              Inventory
+              Warehouse
             </p>
           </div>
 
-          <nav className="flex flex-1 flex-col gap-1 p-3">
+          <nav className="flex flex-1 flex-col gap-1 overflow-auto p-3">
             {navItems.map((item) => (
               <NavLink
                 key={item.to}
@@ -54,21 +58,41 @@ export default function Layout() {
         </aside>
 
         <div className="flex min-w-0 flex-1 flex-col">
-          {/* Mobile top bar */}
-          <header className="flex items-center justify-between border-b border-border bg-surface px-4 py-3 md:hidden">
-            <div>
-              <p className="font-display text-xl text-ink">Saka Homes</p>
-              <p className="text-[10px] font-medium uppercase tracking-[0.14em] text-muted">
-                Inventory
-              </p>
+          <header className="border-b border-border bg-surface px-4 py-3 md:hidden">
+            <div className="flex items-center justify-between gap-3">
+              <div>
+                <p className="font-display text-xl text-ink">Saka Homes</p>
+                <p className="text-[10px] font-medium uppercase tracking-[0.14em] text-muted">
+                  Warehouse
+                </p>
+              </div>
+              <button
+                type="button"
+                onClick={logout}
+                className="rounded-lg border border-border px-3 py-1.5 text-xs font-medium text-muted transition-colors hover:text-ink"
+              >
+                Sign out
+              </button>
             </div>
-            <button
-              type="button"
-              onClick={logout}
-              className="rounded-lg border border-border px-3 py-1.5 text-xs font-medium text-muted transition-colors hover:text-ink"
-            >
-              Sign out
-            </button>
+            <nav className="mt-3 flex gap-2 overflow-x-auto pb-1">
+              {navItems.map((item) => (
+                <NavLink
+                  key={item.to}
+                  to={item.to}
+                  end={item.end}
+                  className={({ isActive }) =>
+                    [
+                      'whitespace-nowrap rounded-lg border px-3 py-1.5 text-xs font-medium transition-colors',
+                      isActive
+                        ? 'border-accent/30 bg-accent-soft text-accent'
+                        : 'border-border text-muted',
+                    ].join(' ')
+                  }
+                >
+                  {item.label}
+                </NavLink>
+              ))}
+            </nav>
           </header>
 
           <main className="flex-1 overflow-auto">
