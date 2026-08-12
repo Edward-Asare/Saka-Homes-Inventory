@@ -120,7 +120,7 @@ export default function Dashboard() {
         <StatCard
           label="Total inventory value"
           value={formatCurrency(stats.totalInventoryValue)}
-          hint="Qty × unit price"
+          hint="Qty × unit price (GHS)"
         />
       </div>
 
