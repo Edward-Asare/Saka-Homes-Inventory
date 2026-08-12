@@ -11,25 +11,148 @@ frontend/   React (Vite) + Tailwind CSS dashboard
 
 ## Prerequisites
 
-- Node.js 18+
-- MongoDB running locally (default `mongodb://127.0.0.1:27017`)
+Install these on your computer before running the app:
 
-## Backend
+1. **Git** — https://git-scm.com/downloads  
+2. **Node.js 18+ (LTS)** — https://nodejs.org  
+3. **MongoDB** — easiest option is **Docker Desktop**: https://www.docker.com/products/docker-desktop/
+
+After installing Node.js, open a new terminal and check:
 
 ```bash
-cd backend
-cp .env.example .env   # edit JWT_SECRET / MONGODB_URI as needed
-npm install
-npm run seed           # demo user + sample items
-npm run dev            # http://localhost:5000
+node -v
+npm -v
 ```
 
-### Demo credentials
+Both commands should print a version number.
+
+---
+
+## Quick start (Windows beginners)
+
+### 1. Clone the repo
+
+Open **PowerShell** or **Cursor Terminal**, then run:
+
+```powershell
+git clone https://github.com/Edward-Asare/Saka-Homes-Inventory.git
+cd Saka-Homes-Inventory
+```
+
+If the app code is still on the feature branch (before it is merged to `main`):
+
+```powershell
+git checkout cursor/saka-homes-inventory-cf6f
+```
+
+Open this folder in Cursor: **File → Open Folder**.
+
+### 2. Start MongoDB with Docker
+
+1. Open **Docker Desktop** and wait until it is running.  
+2. In the terminal:
+
+```powershell
+docker run -d --name saka-mongo -p 27017:27017 mongo:7
+```
+
+Next time you only need:
+
+```powershell
+docker start saka-mongo
+```
+
+> No Docker? Install [MongoDB Community](https://www.mongodb.com/try/download/community) and make sure the MongoDB service is running, then continue.
+
+### 3. Start the backend (Terminal 1)
+
+```powershell
+cd backend
+copy .env.example .env
+npm install
+npm run seed
+npm run dev
+```
+
+Leave this terminal open.  
+You should see: `API listening on http://localhost:5000`
+
+### 4. Start the frontend (Terminal 2)
+
+Open a second terminal (**Terminal → New Terminal**):
+
+```powershell
+cd frontend
+npm install
+npm run dev
+```
+
+Leave this terminal open too.  
+You should see something like: `http://localhost:5173`
+
+### 5. Open the app
+
+In Chrome or Edge, go to:
+
+**http://localhost:5173**
+
+### Demo login
 
 - Email: `admin@sakahomes.com`
 - Password: `password123`
 
-### API
+---
+
+## Mac / Linux quick start
+
+```bash
+# MongoDB via Docker
+docker run -d --name saka-mongo -p 27017:27017 mongo:7
+
+# Backend
+cd backend
+cp .env.example .env
+npm install
+npm run seed
+npm run dev
+
+# Frontend (new terminal)
+cd frontend
+npm install
+npm run dev
+```
+
+Then open http://localhost:5173
+
+---
+
+## Every time you want to run it again
+
+1. Start Docker Desktop (if you use it)  
+2. `docker start saka-mongo`  
+3. Terminal 1: `cd backend` → `npm run dev`  
+4. Terminal 2: `cd frontend` → `npm run dev`  
+5. Open http://localhost:5173
+
+You only need `npm install` and `npm run seed` again if you re-clone or reset the database.
+
+---
+
+## Environment variables (`backend/.env`)
+
+Copied from `.env.example`:
+
+| Variable | Default | Purpose |
+|----------|---------|---------|
+| `PORT` | `5000` | API port |
+| `MONGODB_URI` | `mongodb://127.0.0.1:27017/saka-homes-inventory` | Database connection |
+| `JWT_SECRET` | (change in production) | Signs auth tokens |
+| `JWT_EXPIRES_IN` | `7d` | Token lifetime |
+| `CLIENT_ORIGIN` | `http://localhost:5173` | Frontend origin for CORS |
+
+---
+
+## API overview
 
 | Method | Path | Auth | Description |
 |--------|------|------|-------------|
@@ -45,12 +168,26 @@ npm run dev            # http://localhost:5000
 
 Item fields: `name`, `sku`, `category`, `quantity`, `unitPrice`, `location`, `lastUpdated`.
 
-## Frontend
+---
 
-```bash
-cd frontend
-npm install
-npm run dev            # http://localhost:5173 (proxies /api → :5000)
-```
+## Troubleshooting
 
-UI includes login/register, sidebar layout, stat cards, searchable/filterable table, stock color coding (red / amber / green), and a slide-over form for add/edit.
+| Problem | Fix |
+|---------|-----|
+| `npm` is not recognized | Reinstall Node.js LTS, then fully close and reopen Cursor/terminal |
+| `docker: command not found` | Install/start Docker Desktop, or install MongoDB Community instead |
+| `EADDRINUSE` / port already in use | Close old terminals running the app, or restart your computer |
+| Cannot connect to MongoDB | Make sure Docker Desktop is running and `saka-mongo` is started |
+| Frontend loads but login fails | Make sure the backend terminal is still running on port 5000 |
+| PowerShell blocks `npm` scripts | Run: `Set-ExecutionPolicy -Scope CurrentUser RemoteSigned` |
+
+---
+
+## App features
+
+- Login / register with JWT auth  
+- Sidebar layout dashboard  
+- Stat cards: total items, low stock alerts, inventory value  
+- Searchable / filterable inventory table  
+- Stock color coding: red (low), amber (warning), green (healthy)  
+- Slide-over panel to add / edit items  
