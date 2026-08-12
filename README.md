@@ -74,6 +74,8 @@ npm run seed
 npm run dev
 ```
 
+`npm run seed` creates the demo login account and leaves inventory **empty** so you can add your own items.
+
 Leave this terminal open.  
 You should see: `API listening on http://localhost:5000`
 
@@ -100,6 +102,8 @@ In Chrome or Edge, go to:
 
 - Email: `admin@sakahomes.com`
 - Password: `password123`
+
+Prices and totals are shown in **Ghana Cedis (GHS)**.
 
 ---
 
@@ -134,7 +138,7 @@ Then open http://localhost:5173
 4. Terminal 2: `cd frontend` → `npm run dev`  
 5. Open http://localhost:5173
 
-You only need `npm install` and `npm run seed` again if you re-clone or reset the database.
+You only need `npm install` again after a fresh clone. Run `npm run seed` only when you want to reset the database (clears all items and recreates the demo login).
 
 ---
 

@@ -19,9 +19,9 @@ export function stockLabel(level) {
 }
 
 export function formatCurrency(value) {
-  return new Intl.NumberFormat('en-US', {
+  return new Intl.NumberFormat('en-GH', {
     style: 'currency',
-    currency: 'USD',
+    currency: 'GHS',
     maximumFractionDigits: 2,
   }).format(value || 0);
 }
